@@ -77,6 +77,7 @@ while True:
         row += 1
     print(main_str)
 
+    # теперь нужно сделать так чтобы ждать от сервера координаты шарика и рокетки
     if is_pressed('k'):
         client_socket.send('k'.encode('utf-8'))
         right_rocket_y -= 1
@@ -89,16 +90,6 @@ while True:
         client_socket.send('coords left rocket'.encode('utf-8'))
         left_rocket_y = int((client_socket.recv(128)).decode('utf-8'))
 
-    if ball_x == (right_rocket_x - 1) and ((ball_y == right_rocket_y) or (ball_y == right_rocket_y + 1) or (ball_y == right_rocket_y - 1)):
-        direct_ball_x = -1
-    elif ball_x == (left_rocket_x + 1) and ((ball_y == left_rocket_y) or (ball_y == left_rocket_y + 1) or (ball_y == left_rocket_y - 1)):
-        direct_ball_x = 1
-
-    if ball_y == 28:
-        direct_ball_y = -1
-    elif ball_y == 1:
-        direct_ball_y = 1
-
     if ball_x == 0:
         client_socket.send('left is looser'.encode('utf-8'))
         print(' '*51 + 'RIGHT PLAYER WIN!!!')
@@ -107,6 +98,3 @@ while True:
         client_socket.send('right is looser'.encode('utf-8'))
         print(' '*51 + 'LEFT PLAYER WIN!!!')
         break
-
-    ball_x += direct_ball_x
-    ball_y += direct_ball_y
