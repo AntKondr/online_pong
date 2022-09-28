@@ -2,9 +2,9 @@ import socket
 from keyboard import is_pressed
 
 
-def get_coords_ball_and_rocket(response):
+def get_coords_rocket_and_ball(response):
     coords = response.split(';')
-    coords = [int(item) for item in coords]
+    coords = [int(coord) for coord in coords]
     return coords
 
 
@@ -29,18 +29,19 @@ def right_rocket(row, col):
         return False
 
 
-width = 120
-height = 30
+WIDTH = 120
+HEIGHT = 30
 
-lan_ip = '192.168.1.107'
+lan_ip1 = '192.168.43.201'
+lan_ip2 = '192.168.1.107'
 local_ip = '127.0.0.1'
 
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-client_socket.connect((local_ip, 8000))
+client_socket.connect((lan_ip1, 8000))
 
 while True:
-    client_socket.send('second player'.encode('utf-8'))
+    #client_socket.send('second player'.encode('utf-8'))
     joined_2_players = (client_socket.recv(128)).decode('utf-8')
     print(joined_2_players)
     if joined_2_players == 'True':
@@ -62,10 +63,10 @@ right_rocket_y = 14
 while True:
     main_str = ''
     row = 0
-    while row < height:
+    while row < HEIGHT:
         row_str = ''
         col = 0
-        while col < width:
+        while col < WIDTH:
             if left_rocket(row, col):
                 row_str += '|'
             elif right_rocket(row, col):
@@ -87,16 +88,16 @@ while True:
         client_socket.send('a'.encode('utf-8'))
         response = (client_socket.recv(128)).decode('utf-8')
         left_rocket_y -= 1
-        right_rocket_y, ball_x, ball_y = get_coords_ball_and_rocket(response)
+        right_rocket_y, ball_x, ball_y = get_coords_rocket_and_ball(response)
     elif is_pressed('z'):
         client_socket.send('z'.encode('utf-8'))
         response = (client_socket.recv(128)).decode('utf-8')
         left_rocket_y += 1
-        right_rocket_y, ball_x, ball_y = get_coords_ball_and_rocket(response)
+        right_rocket_y, ball_x, ball_y = get_coords_rocket_and_ball(response)
     else:
         client_socket.send('coords right rocket'.encode('utf-8'))
         response = (client_socket.recv(128)).decode('utf-8')
-        right_rocket_y, ball_x, ball_y = get_coords_ball_and_rocket(response)
+        right_rocket_y, ball_x, ball_y = get_coords_rocket_and_ball(response)
 
     if ball_x == 0:
         client_socket.send('left is looser'.encode('utf-8'))

@@ -50,12 +50,13 @@ def load_response(request_text):
         run = False
 
 
-lan_ip = '192.168.1.107'
+lan_ip1 = '192.168.43.201'
+lan_ip2 = '192.168.1.107'
 local_ip = '127.0.0.1'
 
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-server_socket.bind((local_ip, 8000))
+server_socket.bind((lan_ip1, 8000))
 server_socket.setblocking(False)
 server_socket.listen()
 
@@ -79,13 +80,24 @@ rooms = []
 pair_players = []
 run = True
 while run:
-    try:
-        client_socket, client_adres = server_socket.accept()
-        client_socket.setblocking(False)
-        new_player = Player(client_socket, client_adres, 'left')
-        pair_players.append(new_player)
-    except:
-        pass
+    while len(pair_players) != 2:
+        try:
+            client_socket, client_adres = server_socket.accept()
+            client_socket.setblocking(False)
+            new_player = Player(client_socket, client_adres, 'left')
+            pair_players.append(new_player)
+        except:
+            pass
+        if len(pair_players) == 2:
+            for player in pair_players:
+                player.socket.send('True'.encode('utf-8'))
+        else:
+            try:
+                new_player.socket.send('False'.encode('utf-8'))
+            except:
+                pass
+        print(len(pair_players))
+        sleep(0.1)
     for player in pair_players:
         try:
             player.request = player.socket.recv(128).decode('utf-8')
@@ -111,4 +123,4 @@ while run:
 
     ball_x += direct_ball_x
     ball_y += direct_ball_y
-    sleep(0.05)
+    sleep(0.1)
