@@ -25,24 +25,24 @@ def load_response(request_text):
             return 'False'
 
     elif request_text == 'coords left rocket':
-        return f'{left_rocket_y}'
+        return f'{left_rocket_y};{ball_x};{ball_y}'
 
     elif request_text == 'coords right rocket':
-        return f'{right_rocket_y}'
+        return f'{right_rocket_y};{ball_x};{ball_y}'
 
     elif request_text == 'a':
         left_rocket_y -= 1
-        return f'{right_rocket_y}'
+        return f'{right_rocket_y};{ball_x};{ball_y}'
     elif request_text == 'z':
         left_rocket_y += 1
-        return f'{right_rocket_y}'
+        return f'{right_rocket_y};{ball_x};{ball_y}'
 
     elif request_text == 'k':
         right_rocket_y -= 1
-        return f'{left_rocket_y}'
+        return f'{left_rocket_y};{ball_x};{ball_y}'
     elif request_text == 'm':
         right_rocket_y += 1
-        return f'{left_rocket_y}'
+        return f'{left_rocket_y};{ball_x};{ball_y}'
 
     if request_text == 'left is looser':
         run = False

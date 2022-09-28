@@ -2,6 +2,12 @@ import socket
 from keyboard import is_pressed
 
 
+def get_coords_ball_and_rocket(response):
+    coords = response.split(';')
+    coords = [int(item) for item in coords]
+    return coords
+
+
 def ball(row, col):
     if row == ball_y and col == ball_x:
         return True
@@ -77,18 +83,20 @@ while True:
         row += 1
     print(main_str)
 
-    # теперь нужно сделать так чтобы ждать от сервера координаты шарика и рокетки
     if is_pressed('a'):
         client_socket.send('a'.encode('utf-8'))
+        response = (client_socket.recv(128)).decode('utf-8')
         left_rocket_y -= 1
-        right_rocket_y = int((client_socket.recv(128)).decode('utf-8'))
+        right_rocket_y, ball_x, ball_y = get_coords_ball_and_rocket(response)
     elif is_pressed('z'):
         client_socket.send('z'.encode('utf-8'))
+        response = (client_socket.recv(128)).decode('utf-8')
         left_rocket_y += 1
-        right_rocket_y = int((client_socket.recv(128)).decode('utf-8'))
+        right_rocket_y, ball_x, ball_y = get_coords_ball_and_rocket(response)
     else:
         client_socket.send('coords right rocket'.encode('utf-8'))
-        right_rocket_y = int((client_socket.recv(128)).decode('utf-8'))
+        response = (client_socket.recv(128)).decode('utf-8')
+        right_rocket_y, ball_x, ball_y = get_coords_ball_and_rocket(response)
 
     if ball_x == 0:
         client_socket.send('left is looser'.encode('utf-8'))
