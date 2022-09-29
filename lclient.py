@@ -38,7 +38,7 @@ local_ip = '127.0.0.1'
 
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-client_socket.connect((lan_ip1, 8000))
+client_socket.connect((local_ip, 8000))
 
 while True:
     #client_socket.send('second player'.encode('utf-8'))

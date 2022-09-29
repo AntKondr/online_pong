@@ -56,7 +56,7 @@ local_ip = '127.0.0.1'
 
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-server_socket.bind((lan_ip1, 8000))
+server_socket.bind((local_ip, 8000))
 server_socket.setblocking(False)
 server_socket.listen()
 
