@@ -4,50 +4,81 @@ from time import sleep
 
 
 class Player():
-    def __init__(self, socket, adres, side):
+    def __init__(self, socket, adres):
         self.socket = socket
         self.adres = adres
-        self.side = side
         self.request = None
 
 
-def load_response(request_text):
-    global left_rocket_y
-    global right_rocket_y
-    global run
-    if request_text == 'start parameters':
-        return f'{ball_x};{ball_y};{direct_ball_x};{direct_ball_y}'
+class Room():
+    sides = ('l', 'r')
+    directs = (-1, 1)
+    left_rocket_x = 2
+    right_rocket_x = 117
 
-    elif request_text == 'second player':
-        if len(pair_players) == 2:
-            return 'True'
+    def __init__(self, pair_players, room_id):
+        self.pair_players = pair_players
+        self.left_player = self.pair_players[0]
+        self.right_player = self.pair_players[1]
+        self.id = room_id
+        self.round = 1
+        self.left_rocket_y = 14
+        self.right_rocket_y = 14
+
+    def set_start_parameters(self):
+        serving_side = self.sides[randint(0, 1)]
+        if serving_side == 'l':
+            self.ball_x, self.ball_y = (3, self.left_rocket_y)
+            self.direct_ball_x = self.directs[1]
         else:
-            return 'False'
+            self.ball_x, self.ball_y = (116, self.right_rocket_y)
+            self.direct_ball_x = self.directs[0]
+        self.direct_ball_y = self.directs[randint(0, 1)]
 
-    elif request_text == 'coords left rocket':
-        return f'{left_rocket_y};{ball_x};{ball_y}'
+    def move_ball(self):
+        if self.ball_x == (self.right_rocket_x - 1) and ((self.ball_y == self.right_rocket_y) or (self.ball_y == self.right_rocket_y + 1) or (self.ball_y == self.right_rocket_y - 1)):
+            self.direct_ball_x = -1
+        elif self.ball_x == (self.left_rocket_x + 1) and ((self.ball_y == self.left_rocket_y) or (self.ball_y == self.left_rocket_y + 1) or (self.ball_y == self.left_rocket_y - 1)):
+            self.direct_ball_x = 1
 
-    elif request_text == 'coords right rocket':
-        return f'{right_rocket_y};{ball_x};{ball_y}'
+        if self.ball_y == 28:
+            self.direct_ball_y = -1
+        elif self.ball_y == 1:
+            self.direct_ball_y = 1
 
-    elif request_text == 'a':
-        left_rocket_y -= 1
-        return f'{right_rocket_y};{ball_x};{ball_y}'
-    elif request_text == 'z':
-        left_rocket_y += 1
-        return f'{right_rocket_y};{ball_x};{ball_y}'
+        self.ball_x += self.direct_ball_x
+        self.ball_y += self.direct_ball_y
 
-    elif request_text == 'k':
-        right_rocket_y -= 1
-        return f'{left_rocket_y};{ball_x};{ball_y}'
-    elif request_text == 'm':
-        right_rocket_y += 1
-        return f'{left_rocket_y};{ball_x};{ball_y}'
+    def form_response(self, request):
+        if request == 'a':
+            self.left_rocket_y -= 1
+            return f'{self.right_rocket_y};{self.ball_x};{self.ball_y}'
+        elif request == 'z':
+            self.left_rocket_y += 1
+            return f'{self.right_rocket_y};{self.ball_x};{self.ball_y}'
 
-    if request_text == 'left is looser':
-        run = False
-    elif request_text == 'right is looser':
-        run = False
+        elif request == 'k':
+            self.right_rocket_y -= 1
+            return f'{self.left_rocket_y};{self.ball_x};{self.ball_y}'
+        elif request == 'm':
+            self.right_rocket_y += 1
+            return f'{self.left_rocket_y};{self.ball_x};{self.ball_y}'
+
+        elif request == 'coords left rocket':
+            return f'{self.left_rocket_y};{self.ball_x};{self.ball_y}'
+
+        elif request == 'coords right rocket':
+            return f'{self.right_rocket_y};{self.ball_x};{self.ball_y}'
+
+        elif request == 'start parameters':
+            return f'{self.ball_x};{self.ball_y};{self.direct_ball_x};{self.direct_ball_y}'
+
+        elif request == 'left is looser':
+            print(request)
+            self.set_start_parameters()
+        elif request == 'right is looser':
+            print(request)
+            self.set_start_parameters()
 
 
 lan_ip1 = '192.168.43.201'
@@ -60,67 +91,43 @@ server_socket.bind((local_ip, 8000))
 server_socket.setblocking(False)
 server_socket.listen()
 
-with open('who_loose', 'r') as file:
-    looser = file.read()
-direct = (-1, 1)
-if looser == 'right':
-    ball_x, ball_y = (3, 14)
-    direct_ball_x = direct[1]
-else:
-    ball_x, ball_y = (116, 14)
-    direct_ball_x = direct[0]
-direct_ball_y = direct[randint(0, 1)]
-
-left_rocket_x = 2
-right_rocket_x = 117
-left_rocket_y = 14
-right_rocket_y = 14
-
 rooms = []
+room_id = 1
 pair_players = []
 run = True
 while run:
-    while len(pair_players) != 2:
-        try:
-            client_socket, client_adres = server_socket.accept()
-            client_socket.setblocking(False)
-            new_player = Player(client_socket, client_adres, 'left')
-            pair_players.append(new_player)
-        except:
-            pass
-        if len(pair_players) == 2:
-            for player in pair_players:
-                player.socket.send('True'.encode('utf-8'))
-        else:
-            try:
-                new_player.socket.send('False'.encode('utf-8'))
-            except:
-                pass
-        print(len(pair_players))
-        sleep(0.1)
-    for player in pair_players:
-        try:
-            player.request = player.socket.recv(128).decode('utf-8')
-            print('request =>', player.request)
-        except:
-            pass
-        try:
-            response = load_response(player.request)
-            player.socket.send(response.encode('utf-8'))
-        except:
-            pass
-        player.request = None
+    try:
+        client_socket, client_adres = server_socket.accept()
+        client_socket.setblocking(False)
+        new_player = Player(client_socket, client_adres)
+        pair_players.append(new_player)
+    except:
+        pass
+    if len(pair_players) == 2:
+        new_room = Room(pair_players, room_id)
+        new_room.set_start_parameters()
+        rooms.append(new_room)
+        room_id += 1
+        for player in pair_players:
+            player.socket.send('True'.encode('utf-8'))
+        pair_players = []
 
-    if ball_x == (right_rocket_x - 1) and ((ball_y == right_rocket_y) or (ball_y == right_rocket_y + 1) or (ball_y == right_rocket_y - 1)):
-        direct_ball_x = -1
-    elif ball_x == (left_rocket_x + 1) and ((ball_y == left_rocket_y) or (ball_y == left_rocket_y + 1) or (ball_y == left_rocket_y - 1)):
-        direct_ball_x = 1
-
-    if ball_y == 28:
-        direct_ball_y = -1
-    elif ball_y == 1:
-        direct_ball_y = 1
-
-    ball_x += direct_ball_x
-    ball_y += direct_ball_y
-    sleep(0.1)
+    if len(rooms) > 0:
+        for room in rooms:
+            print('i am in', room.id, 'room')
+            for player in room.pair_players:
+                try:
+                    player.request = player.socket.recv(128).decode('utf-8')
+                    print('request =>', player.request)
+                except:
+                    pass
+                try:
+                    response = room.form_response(player.request)
+                    player.socket.send(response.encode('utf-8'))
+                except:
+                    pass
+                player.request = None
+            room.move_ball()
+    else:
+        print('rooms are empty')
+    sleep(0.2)

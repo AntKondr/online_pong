@@ -40,12 +40,9 @@ client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
 client_socket.connect((local_ip, 8000))
 
-while True:
-    #client_socket.send('second player'.encode('utf-8'))
-    joined_2_players = (client_socket.recv(128)).decode('utf-8')
-    print(joined_2_players)
-    if joined_2_players == 'True':
-        break
+print('wait for second player:')
+joined_2_players = (client_socket.recv(128)).decode('utf-8')
+print(joined_2_players)
 
 client_socket.send('start parameters'.encode('utf-8'))
 start_parameters = (client_socket.recv(128)).decode('utf-8')
@@ -102,8 +99,6 @@ while True:
     if ball_x == 0:
         client_socket.send('left is looser'.encode('utf-8'))
         print(' '*51 + 'RIGHT PLAYER WIN!!!')
-        break
     elif ball_x == 119:
         client_socket.send('right is looser'.encode('utf-8'))
         print(' '*51 + 'LEFT PLAYER WIN!!!')
-        break
