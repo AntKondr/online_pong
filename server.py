@@ -4,10 +4,12 @@ from time import sleep
 
 
 class Player:
-    def __init__(self, socket, adres):
+    def __init__(self, socket, adres, side):
         self.socket = socket
         self.adres = adres
         self.request = None
+        self.side = side
+        self.score = 0
 
 
 class Room:
@@ -18,12 +20,12 @@ class Room:
 
     def __init__(self, pair_players, room_id):
         self.pair_players = pair_players
-        self.left_player = self.pair_players[0]
-        self.right_player = self.pair_players[1]
+        self.left_player = pair_players[0]
+        self.right_player = pair_players[1]
         self.id = room_id
-        self.round = 1
-        self.left_rocket_y = 14
-        self.right_rocket_y = 14
+        self.game_round = 1
+        self.left_rocket_y = 19
+        self.right_rocket_y = 19
 
     def set_start_parameters(self):
         serving_side = Room.sides[randint(0, 1)]
@@ -41,9 +43,9 @@ class Room:
         elif self.ball_x == (Room.left_rocket_x + 1) and ((self.ball_y == self.left_rocket_y) or (self.ball_y == self.left_rocket_y + 1) or (self.ball_y == self.left_rocket_y - 1)):
             self.direct_ball_x = 1
 
-        if self.ball_y == 28:
+        if self.ball_y == 34:
             self.direct_ball_y = -1
-        elif self.ball_y == 1:
+        elif self.ball_y == 5:
             self.direct_ball_y = 1
 
         self.ball_x += self.direct_ball_x
@@ -52,33 +54,38 @@ class Room:
     def form_response(self, request):
         if request == 'a':
             self.left_rocket_y -= 1
-            return f'{self.right_rocket_y};{self.ball_x};{self.ball_y}'
+            return f'{self.right_rocket_y};{self.ball_x};{self.ball_y};{self.game_round};{self.left_player.score};{self.right_player.score}'
         elif request == 'z':
             self.left_rocket_y += 1
-            return f'{self.right_rocket_y};{self.ball_x};{self.ball_y}'
+            return f'{self.right_rocket_y};{self.ball_x};{self.ball_y};{self.game_round};{self.left_player.score};{self.right_player.score}'
 
         elif request == 'k':
             self.right_rocket_y -= 1
-            return f'{self.left_rocket_y};{self.ball_x};{self.ball_y}'
+            return f'{self.left_rocket_y};{self.ball_x};{self.ball_y};{self.game_round};{self.left_player.score};{self.right_player.score}'
         elif request == 'm':
             self.right_rocket_y += 1
-            return f'{self.left_rocket_y};{self.ball_x};{self.ball_y}'
+            return f'{self.left_rocket_y};{self.ball_x};{self.ball_y};{self.game_round};{self.left_player.score};{self.right_player.score}'
 
         elif request == 'coords left rocket':
-            return f'{self.left_rocket_y};{self.ball_x};{self.ball_y}'
+            return f'{self.left_rocket_y};{self.ball_x};{self.ball_y};{self.game_round};{self.left_player.score};{self.right_player.score}'
 
         elif request == 'coords right rocket':
-            return f'{self.right_rocket_y};{self.ball_x};{self.ball_y}'
+            return f'{self.right_rocket_y};{self.ball_x};{self.ball_y};{self.game_round};{self.left_player.score};{self.right_player.score}'
 
         elif request == 'start parameters':
-            return f'{self.ball_x};{self.ball_y};{self.direct_ball_x};{self.direct_ball_y}'
+            return f'{self.ball_x};{self.ball_y};{self.id};{self.game_round};{self.left_player.score};{self.right_player.score}'
 
         elif request == 'left is looser':
             self.set_start_parameters()
-            return f'{self.ball_x};{self.ball_y};{self.direct_ball_x};{self.direct_ball_y}'
+            self.game_round += 1
+            self.right_player.score += 1
+            return f'{self.ball_x};{self.ball_y};{self.game_round};{self.left_player.score};{self.right_player.score}'
+
         elif request == 'right is looser':
             self.set_start_parameters()
-            return f'{self.ball_x};{self.ball_y};{self.direct_ball_x};{self.direct_ball_y}'
+            self.game_round += 1
+            self.left_player.score += 1
+            return f'{self.ball_x};{self.ball_y};{self.game_round};{self.left_player.score};{self.right_player.score}'
 
 
 lan_ip1 = '192.168.43.201'
@@ -91,15 +98,20 @@ server_socket.bind((local_ip, 8000))
 server_socket.setblocking(False)
 server_socket.listen()
 
-rooms = []
 room_id = 1
+rooms = []
 pair_players = []
 run = True
 while run:
     try:
         client_socket, client_adres = server_socket.accept()
         client_socket.setblocking(False)
-        new_player = Player(client_socket, client_adres)
+        if len(pair_players) == 0:
+            side = 'l'
+        else:
+            side = 'r'
+        new_player = Player(client_socket, client_adres, side)
+        new_player.socket.send((new_player.side).encode('utf-8'))
         pair_players.append(new_player)
     except:
         pass

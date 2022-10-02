@@ -2,16 +2,10 @@ import socket
 from keyboard import is_pressed
 
 
-def get_start_parameters(response):
-    start_parameters = response.split(';')
-    start_parameters = [int(param) for param in start_parameters]
-    return start_parameters
-
-
-def get_coords_rocket_and_ball(response):
-    coords = response.split(';')
-    coords = [int(item) for item in coords]
-    return coords
+def get_parameters(response):
+    parameters = response.split(';')
+    parameters = [int(param) for param in parameters]
+    return parameters
 
 
 def ball(row, col):
@@ -36,7 +30,7 @@ def right_rocket(row, col):
 
 
 WIDTH = 120
-HEIGHT = 30
+HEIGHT = 36
 
 lan_ip1 = '192.168.43.201'
 lan_ip2 = '192.168.1.107'
@@ -46,17 +40,24 @@ client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
 client_socket.connect((local_ip, 8000))
 
+side = (client_socket.recv(128)).decode('utf-8')
+print('my side is', side)
 print('wait for second player:')
 joined_2_players = (client_socket.recv(128)).decode('utf-8')
 print(joined_2_players)
 
 client_socket.send('start parameters'.encode('utf-8'))
-start_parameters = (client_socket.recv(128)).decode('utf-8')
-ball_x, ball_y, direct_ball_x, direct_ball_y = get_start_parameters(start_parameters)
+parameters = (client_socket.recv(128)).decode('utf-8')
+ball_x, ball_y, room_id, game_round, left_player_score, right_player_score = get_parameters(parameters)
 left_rocket_x = 2
-left_rocket_y = 14
+left_rocket_y = 19
 right_rocket_x = 117
-right_rocket_y = 14
+right_rocket_y = 19
+
+info_str = f'room id = {room_id};   game_round = {game_round}'
+length_info_str = len(info_str)
+l_score_str = str(left_player_score)
+r_score_str = str(right_player_score)
 
 while True:
     main_str = ''
@@ -65,15 +66,21 @@ while True:
         row_str = ''
         col = 0
         while col < WIDTH:
-            if left_rocket(row, col):
+            if row == 0 and col < length_info_str:
+                row_str += info_str[col]
+            elif row == 3 and col == 20:
+                row_str += l_score_str
+            elif row == 3 and col == 100:
+                row_str += r_score_str
+            elif left_rocket(row, col):
                 row_str += '|'
             elif right_rocket(row, col):
                 row_str += '|'
             elif ball(row, col):
                 row_str += 'O'
-            elif row == 0 or row == 29:
+            elif row == 4 or row == 35:
                 row_str += '='
-            elif col == 0 or col == 59 or col == 119:
+            elif (col == 0 or col == 59 or col == 119) and (4 < row < 35):
                 row_str += '|'
             else:
                 row_str += ' '
@@ -86,22 +93,22 @@ while True:
         client_socket.send('k'.encode('utf-8'))
         response = (client_socket.recv(128)).decode('utf-8')
         right_rocket_y -= 1
-        left_rocket_y, ball_x, ball_y = get_coords_rocket_and_ball(response)
+        left_rocket_y, ball_x, ball_y, game_round, left_player_score, right_player_score = get_parameters(response)
     elif is_pressed('m'):
         client_socket.send('m'.encode('utf-8'))
         response = (client_socket.recv(128)).decode('utf-8')
         right_rocket_y += 1
-        left_rocket_y, ball_x, ball_y = get_coords_rocket_and_ball(response)
+        left_rocket_y, ball_x, ball_y, game_round, left_player_score, right_player_score = get_parameters(response)
     else:
         client_socket.send('coords left rocket'.encode('utf-8'))
         response = (client_socket.recv(128)).decode('utf-8')
-        left_rocket_y, ball_x, ball_y = get_coords_rocket_and_ball(response)
+        left_rocket_y, ball_x, ball_y, game_round, left_player_score, right_player_score = get_parameters(response)
 
-    if ball_x == 0:
-        client_socket.send('left is looser'.encode('utf-8'))
-        start_parameters = (client_socket.recv(128)).decode('utf-8')
-        ball_x, ball_y, direct_ball_x, direct_ball_y = get_start_parameters(start_parameters)
-    elif ball_x == 119:
+    if ball_x == 119:
         client_socket.send('right is looser'.encode('utf-8'))
-        start_parameters = (client_socket.recv(128)).decode('utf-8')
-        ball_x, ball_y, direct_ball_x, direct_ball_y = get_start_parameters(start_parameters)
+        parameters = (client_socket.recv(128)).decode('utf-8')
+        ball_x, ball_y, game_round, left_player_score, right_player_score = get_parameters(parameters)
+    info_str = f'room id = {room_id};   game_round = {game_round}'
+    length_info_str = len(info_str)
+    l_score_str = str(left_player_score)
+    r_score_str = str(right_player_score)
