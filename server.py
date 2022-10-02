@@ -3,14 +3,14 @@ from random import randint
 from time import sleep
 
 
-class Player():
+class Player:
     def __init__(self, socket, adres):
         self.socket = socket
         self.adres = adres
         self.request = None
 
 
-class Room():
+class Room:
     sides = ('l', 'r')
     directs = (-1, 1)
     left_rocket_x = 2
@@ -26,19 +26,19 @@ class Room():
         self.right_rocket_y = 14
 
     def set_start_parameters(self):
-        serving_side = self.sides[randint(0, 1)]
+        serving_side = Room.sides[randint(0, 1)]
         if serving_side == 'l':
             self.ball_x, self.ball_y = (3, self.left_rocket_y)
-            self.direct_ball_x = self.directs[1]
+            self.direct_ball_x = Room.directs[1]
         else:
             self.ball_x, self.ball_y = (116, self.right_rocket_y)
-            self.direct_ball_x = self.directs[0]
-        self.direct_ball_y = self.directs[randint(0, 1)]
+            self.direct_ball_x = Room.directs[0]
+        self.direct_ball_y = Room.directs[randint(0, 1)]
 
     def move_ball(self):
-        if self.ball_x == (self.right_rocket_x - 1) and ((self.ball_y == self.right_rocket_y) or (self.ball_y == self.right_rocket_y + 1) or (self.ball_y == self.right_rocket_y - 1)):
+        if self.ball_x == (Room.right_rocket_x - 1) and ((self.ball_y == self.right_rocket_y) or (self.ball_y == self.right_rocket_y + 1) or (self.ball_y == self.right_rocket_y - 1)):
             self.direct_ball_x = -1
-        elif self.ball_x == (self.left_rocket_x + 1) and ((self.ball_y == self.left_rocket_y) or (self.ball_y == self.left_rocket_y + 1) or (self.ball_y == self.left_rocket_y - 1)):
+        elif self.ball_x == (Room.left_rocket_x + 1) and ((self.ball_y == self.left_rocket_y) or (self.ball_y == self.left_rocket_y + 1) or (self.ball_y == self.left_rocket_y - 1)):
             self.direct_ball_x = 1
 
         if self.ball_y == 28:
@@ -74,11 +74,11 @@ class Room():
             return f'{self.ball_x};{self.ball_y};{self.direct_ball_x};{self.direct_ball_y}'
 
         elif request == 'left is looser':
-            print(request)
             self.set_start_parameters()
+            return f'{self.ball_x};{self.ball_y};{self.direct_ball_x};{self.direct_ball_y}'
         elif request == 'right is looser':
-            print(request)
             self.set_start_parameters()
+            return f'{self.ball_x};{self.ball_y};{self.direct_ball_x};{self.direct_ball_y}'
 
 
 lan_ip1 = '192.168.43.201'
@@ -109,7 +109,7 @@ while run:
         rooms.append(new_room)
         room_id += 1
         for player in pair_players:
-            player.socket.send('True'.encode('utf-8'))
+            player.socket.send('Go'.encode('utf-8'))
         pair_players = []
 
     if len(rooms) > 0:

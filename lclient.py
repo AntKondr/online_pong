@@ -2,6 +2,12 @@ import socket
 from keyboard import is_pressed
 
 
+def get_start_parameters(response):
+    start_parameters = response.split(';')
+    start_parameters = [int(param) for param in start_parameters]
+    return start_parameters
+
+
 def get_coords_rocket_and_ball(response):
     coords = response.split(';')
     coords = [int(coord) for coord in coords]
@@ -46,12 +52,7 @@ print(joined_2_players)
 
 client_socket.send('start parameters'.encode('utf-8'))
 start_parameters = (client_socket.recv(128)).decode('utf-8')
-
-start_parameters = start_parameters.split(';')
-ball_x = int(start_parameters[0])
-ball_y = int(start_parameters[1])
-direct_ball_x = int(start_parameters[2])
-direct_ball_y = int(start_parameters[3])
+ball_x, ball_y, direct_ball_x, direct_ball_y = get_start_parameters(start_parameters)
 left_rocket_x = 2
 left_rocket_y = 14
 right_rocket_x = 117
@@ -98,7 +99,9 @@ while True:
 
     if ball_x == 0:
         client_socket.send('left is looser'.encode('utf-8'))
-        print(' '*51 + 'RIGHT PLAYER WIN!!!')
+        start_parameters = (client_socket.recv(128)).decode('utf-8')
+        ball_x, ball_y, direct_ball_x, direct_ball_y = get_start_parameters(start_parameters)
     elif ball_x == 119:
         client_socket.send('right is looser'.encode('utf-8'))
-        print(' '*51 + 'LEFT PLAYER WIN!!!')
+        start_parameters = (client_socket.recv(128)).decode('utf-8')
+        ball_x, ball_y, direct_ball_x, direct_ball_y = get_start_parameters(start_parameters)
