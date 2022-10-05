@@ -2,12 +2,6 @@ import socket
 from keyboard import is_pressed
 
 
-def get_parameters(response):
-    parameters = response.split(';')
-    parameters = [int(param) for param in parameters]
-    return parameters
-
-
 def ball(row, col):
     if row == ball_y and col == ball_x:
         return True
@@ -29,41 +23,50 @@ def right_rocket(row, col):
         return False
 
 
+def get_parameters(response):
+    parameters = response.split(';')
+    parameters = [int(param) for param in parameters]
+    return parameters
+
+
+def render():
+    main_str = ''
+    row = 0
+    while row < HEIGHT:
+        row_str = ''
+        col = 0
+        while col < WIDTH:
+            if row == 0 and col < length_info_str:
+                row_str += info_str[col]
+            elif row == 3 and col == 20:
+                row_str += l_score_str
+            elif row == 3 and col == 100:
+                row_str += r_score_str
+            elif left_rocket(row, col):
+                row_str += '|'
+            elif right_rocket(row, col):
+                row_str += '|'
+            elif ball(row, col):
+                row_str += 'O'
+            elif row == 4 or row == 35:
+                row_str += '='
+            elif (col == 0 or col == 59 or col == 119) and (4 < row < 35):
+                row_str += '|'
+            else:
+                row_str += ' '
+            col += 1
+        main_str += row_str
+        row += 1
+    print(main_str)
+
+
 def left_client():
     global info_str, length_info_str
     global l_score_str, r_score_str
     global left_rocket_y, right_rocket_y
     global ball_x, ball_y
     while True:
-        main_str = ''
-        row = 0
-        while row < HEIGHT:
-            row_str = ''
-            col = 0
-            while col < WIDTH:
-                if row == 0 and col < length_info_str:
-                    row_str += info_str[col]
-                elif row == 3 and col == 20:
-                    row_str += l_score_str
-                elif row == 3 and col == 100:
-                    row_str += r_score_str
-                elif left_rocket(row, col):
-                    row_str += '|'
-                elif right_rocket(row, col):
-                    row_str += '|'
-                elif ball(row, col):
-                    row_str += 'O'
-                elif row == 4 or row == 35:
-                    row_str += '='
-                elif (col == 0 or col == 59 or col == 119) and (4 < row < 35):
-                    row_str += '|'
-                else:
-                    row_str += ' '
-                col += 1
-            main_str += row_str
-            row += 1
-        print(main_str)
-
+        render()
         if is_pressed('a'):
             client_socket.send('a'.encode('utf-8'))
             response = (client_socket.recv(128)).decode('utf-8')
@@ -95,35 +98,7 @@ def right_client():
     global left_rocket_y, right_rocket_y
     global ball_x, ball_y
     while True:
-        main_str = ''
-        row = 0
-        while row < HEIGHT:
-            row_str = ''
-            col = 0
-            while col < WIDTH:
-                if row == 0 and col < length_info_str:
-                    row_str += info_str[col]
-                elif row == 3 and col == 20:
-                    row_str += l_score_str
-                elif row == 3 and col == 100:
-                    row_str += r_score_str
-                elif left_rocket(row, col):
-                    row_str += '|'
-                elif right_rocket(row, col):
-                    row_str += '|'
-                elif ball(row, col):
-                    row_str += 'O'
-                elif row == 4 or row == 35:
-                    row_str += '='
-                elif (col == 0 or col == 59 or col == 119) and (4 < row < 35):
-                    row_str += '|'
-                else:
-                    row_str += ' '
-                col += 1
-            main_str += row_str
-            row += 1
-        print(main_str)
-
+        render()
         if is_pressed('k'):
             client_socket.send('k'.encode('utf-8'))
             response = (client_socket.recv(128)).decode('utf-8')
